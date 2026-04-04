@@ -97,8 +97,11 @@ df["timeline_ms"] = df["ts_ms"] - match_start
 
 min_t = int(df["timeline_ms"].min())
 max_t = int(df["timeline_ms"].max())
+timeline_span = max_t - min_t
 
-if min_t < max_t:
+single_timestamp_match = timeline_span == 0
+
+if not single_timestamp_match:
     selected_t = st.slider(
         "Select Time in Match (ms)",
         min_value=min_t,
@@ -108,7 +111,9 @@ if min_t < max_t:
     st.caption(f"Time into match: {selected_t / 1000:.2f} seconds")
     timeline_df = df[df["timeline_ms"] <= selected_t].copy()
 else:
-    st.info("Single timestamp match — showing full data")
+    st.info(
+        "This match contains events within a single timestamp window, so playback is not shown. Displaying the full available match slice."
+    )
     timeline_df = df.copy()
 
 # ---------- DATA FILTERS ----------
@@ -121,7 +126,6 @@ if not show_bots:
     filtered_df = filtered_df[filtered_df["player_type"] != "bot"]
 
 if show_heatmap:
-    # Reduce clutter when heatmap is enabled
     filtered_df = filtered_df[
         filtered_df["event"].isin(["Position", "BotPosition"])
     ]
@@ -174,6 +178,12 @@ if show_heatmap:
 # ---------- DEBUG ----------
 st.markdown("### Timeline Diagnostics")
 d1, d2, d3 = st.columns(3)
-d1.metric("Start (ms)", min_t)
-d2.metric("End (ms)", max_t)
-d3.metric("Span (ms)", max_t - min_t)
+
+if single_timestamp_match:
+    d1.metric("Timeline Mode", "Single Window")
+    d2.metric("Visible Time Points", df["timeline_ms"].nunique())
+    d3.metric("Timeline Span (ms)", "N/A")
+else:
+    d1.metric("Start (ms)", min_t)
+    d2.metric("End (ms)", max_t)
+    d3.metric("Span (ms)", timeline_span)
