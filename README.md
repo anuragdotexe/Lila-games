@@ -73,3 +73,5 @@ Only x and z are used (y ignored).
 * Kill data is sparse → bot combat included for meaningful heatmaps
 * Movement heatmaps are the strongest signal in this dataset
 * Built for clarity and evaluation speed
+
+* completed
